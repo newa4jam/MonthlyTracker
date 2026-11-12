@@ -1,0 +1,17 @@
+{
+  "name": "SaveTrack — Local Savings Quest",
+  "short_name": "SaveTrack",
+  "description": "A private, local-only, gamified monthly income, expense and savings tracker.",
+  "id": "./",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "portrait-primary",
+  "background_color": "#090d1d",
+  "theme_color": "#10152c",
+  "categories": ["finance", "productivity"],
+  "icons": [
+    { "src": "icons/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any maskable" },
+    { "src": "icons/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any maskable" }
+  ]
+}

@@ -1,0 +1,186 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <meta name="theme-color" content="#10152c" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta name="apple-mobile-web-app-title" content="SaveTrack" />
+  <meta name="description" content="A private, local-only, gamified monthly finance tracker." />
+  <link rel="manifest" href="manifest.webmanifest" />
+  <link rel="apple-touch-icon" href="icons/icon-192.png" />
+  <link rel="icon" href="icons/icon-192.png" />
+  <link rel="stylesheet" href="styles.css" />
+  <title>SaveTrack</title>
+</head>
+<body>
+  <div class="ambient ambient-one"></div><div class="ambient ambient-two"></div>
+  <div id="toast" class="toast" role="status" aria-live="polite"></div>
+
+  <div class="app-shell">
+    <header class="topbar">
+      <div class="brand">
+        <div class="brand-mark">S</div>
+        <div><strong>SaveTrack</strong><span>Local Quest</span></div>
+      </div>
+      <button class="privacy-pill" id="privacyButton" aria-label="Show local storage information"><span class="pulse"></span> On-device only</button>
+    </header>
+
+    <main>
+      <section class="month-strip card-soft" aria-label="Selected month">
+        <button class="icon-button" id="previousMonth" aria-label="Previous month">‹</button>
+        <button class="month-button" id="monthButton"><span id="monthLabel">November 2026</span><small>Tap to choose month</small></button>
+        <input id="monthPicker" type="month" aria-label="Choose month" />
+        <button class="icon-button" id="nextMonth" aria-label="Next month">›</button>
+      </section>
+
+      <section id="dashboardView" class="view active" data-view="dashboard">
+        <article class="hero-card">
+          <div class="hero-copy">
+            <span class="eyebrow">MONTHLY SAVINGS QUEST</span>
+            <h1 id="heroTitle">Build your first streak</h1>
+            <p id="heroMessage">Log income and spending to reveal this month’s score.</p>
+            <div class="level-row"><span id="levelLabel">Level 1 · Starter</span><span id="xpLabel">0 / 500 XP</span></div>
+            <div class="xp-track"><span id="xpFill"></span></div>
+          </div>
+          <div class="score-orb" id="scoreOrb">
+            <svg viewBox="0 0 120 120" aria-hidden="true">
+              <circle class="orb-track" cx="60" cy="60" r="49"></circle>
+              <circle class="orb-value" id="orbValue" cx="60" cy="60" r="49"></circle>
+            </svg>
+            <div><strong id="savingsScore">0</strong><small>SCORE</small></div>
+          </div>
+        </article>
+
+        <div class="metric-grid">
+          <article class="metric-card income"><div class="metric-icon">↗</div><span>Income</span><strong id="incomeMetric">¥0</strong><small id="incomeCount">0 entries</small></article>
+          <article class="metric-card expense"><div class="metric-icon">↘</div><span>Expenses</span><strong id="expenseMetric">¥0</strong><small id="expenseCount">0 entries</small></article>
+          <article class="metric-card remaining"><div class="metric-icon">◆</div><span>After expenses</span><strong id="remainingMetric">¥0</strong><small>Available to allocate</small></article>
+          <article class="metric-card saving"><div class="metric-icon">★</div><span>Net savings</span><strong id="savingMetric">¥0</strong><small id="rateMetric">0% of income</small></article>
+        </div>
+
+        <article class="quest-card card">
+          <div class="section-title"><div><span class="eyebrow">ALLOCATION MAP</span><h2>Where the remainder goes</h2></div><button class="text-button" data-go="savings">Edit plan</button></div>
+          <div class="allocation-bar" id="allocationBar"></div>
+          <div class="allocation-legend" id="allocationLegend"></div>
+          <p class="warning" id="allocationWarning" hidden></p>
+        </article>
+
+        <article class="card">
+          <div class="section-title"><div><span class="eyebrow">RECENT ACTIVITY</span><h2>This month</h2></div><button class="round-add" id="quickAdd" aria-label="Add transaction">+</button></div>
+          <div id="recentActivity" class="activity-list"></div>
+        </article>
+
+        <article class="card mission-card">
+          <div class="section-title"><div><span class="eyebrow">SIDE QUESTS</span><h2>Monthly missions</h2></div><span class="trophy">🏆</span></div>
+          <div id="missionList" class="mission-list"></div>
+        </article>
+      </section>
+
+      <section id="activityView" class="view" data-view="activity">
+        <div class="page-heading"><div><span class="eyebrow">LEDGER</span><h1>Activity</h1><p>Income and day-to-day expenses.</p></div><button class="primary-button compact" id="addTransaction">+ Add</button></div>
+        <div class="filter-row" role="group" aria-label="Activity filters">
+          <button class="chip active" data-filter="all">All</button><button class="chip" data-filter="income">Income</button><button class="chip" data-filter="expense">Expenses</button>
+        </div>
+        <div id="activityList" class="activity-list large"></div>
+      </section>
+
+      <section id="fixedView" class="view" data-view="fixed">
+        <div class="page-heading"><div><span class="eyebrow">AUTO-PILOT</span><h1>Fixed expenses</h1><p>Added to every applicable month automatically.</p></div><button class="primary-button compact" id="addFixed">+ Add</button></div>
+        <article class="summary-banner"><span>Active monthly total</span><strong id="fixedTotal">¥0</strong><small id="fixedCount">0 recurring items</small></article>
+        <div id="fixedList" class="stack-list"></div>
+      </section>
+
+      <section id="savingsView" class="view" data-view="savings">
+        <div class="page-heading"><div><span class="eyebrow">SAVINGS QUEST</span><h1>Monthly breakdown</h1><p>Plan the money left after all expenses.</p></div></div>
+        <article class="equation-card card">
+          <div class="equation-line"><span>Income</span><strong id="eqIncome">¥0</strong></div>
+          <div class="equation-line minus"><span>All expenses</span><strong id="eqExpenses">− ¥0</strong></div>
+          <div class="equation-result"><span>Remaining</span><strong id="eqRemaining">¥0</strong></div>
+        </article>
+        <form id="planForm" class="card form-card">
+          <div class="section-title"><div><span class="eyebrow">ALLOCATE</span><h2>Use of remaining money</h2></div><span class="auto-save">Auto-saved</span></div>
+          <label><span>💳 Credit-card payment</span><div class="money-input"><b id="currencyPrefix1">¥</b><input inputmode="decimal" type="number" min="0" step="1" name="creditCardPayment" placeholder="0" /></div></label>
+          <label><span>🌱 NISA investment</span><div class="money-input"><b id="currencyPrefix2">¥</b><input inputmode="decimal" type="number" min="0" step="1" name="nisa" placeholder="0" /></div></label>
+          <label><span>💵 Cash reserve / use</span><div class="money-input"><b id="currencyPrefix3">¥</b><input inputmode="decimal" type="number" min="0" step="1" name="cashReserve" placeholder="0" /></div></label>
+          <label><span>📦 Other allocation</span><div class="money-input"><b id="currencyPrefix4">¥</b><input inputmode="decimal" type="number" min="0" step="1" name="other" placeholder="0" /></div></label>
+        </form>
+        <article class="net-card" id="netCard"><span>NET SAVINGS</span><strong id="netSavings">¥0</strong><small id="netHint">What remains after allocations</small></article>
+      </section>
+
+      <section id="insightsView" class="view" data-view="insights">
+        <div class="page-heading"><div><span class="eyebrow">PROGRESS MAP</span><h1>Insights</h1><p>Your recent monthly saving trend.</p></div></div>
+        <article class="card chart-card"><div class="section-title"><div><span class="eyebrow">6-MONTH RUN</span><h2>Net savings</h2></div><strong id="trendChange">—</strong></div><div class="chart-wrap"><canvas id="savingsChart" width="700" height="360" aria-label="Six-month net savings chart"></canvas></div></article>
+        <article class="card"><div class="section-title"><div><span class="eyebrow">EXPENSE RADAR</span><h2>By category</h2></div></div><div id="categoryBreakdown" class="category-breakdown"></div></article>
+        <article class="card"><div class="section-title"><div><span class="eyebrow">PAYMENT ROUTES</span><h2>How you paid</h2></div></div><div id="paymentBreakdown" class="category-breakdown"></div></article>
+      </section>
+
+      <section id="settingsView" class="view" data-view="settings">
+        <div class="page-heading"><div><span class="eyebrow">CONTROL ROOM</span><h1>Settings</h1><p>Preferences, backup and privacy controls.</p></div></div>
+        <form id="settingsForm" class="card form-card">
+          <label><span>Display name</span><input name="displayName" maxlength="30" placeholder="Saver" /></label>
+          <label><span>Currency</span><select name="currency"><option value="JPY">JPY · ¥</option><option value="USD">USD · $</option><option value="EUR">EUR · €</option><option value="GBP">GBP · £</option></select></label>
+          <label><span>Monthly net-savings target</span><input name="monthlyGoal" type="number" min="0" step="1" inputmode="decimal" /></label>
+          <button class="primary-button" type="submit">Save settings</button>
+        </form>
+        <article class="card local-card"><div class="shield">🔒</div><div><h2>Local-only by design</h2><p>No account, analytics, advertising, cloud database or financial-data upload. Your records stay in this browser’s on-device database.</p></div></article>
+        <article class="card action-card">
+          <h2>Backup & restore</h2><p>Export a backup before clearing Safari data, changing phones or deleting the Home Screen app.</p>
+          <button class="secondary-button" id="exportBackup">Export JSON backup</button>
+          <label class="secondary-button file-button">Restore JSON backup<input id="importBackup" type="file" accept="application/json,.json" /></label>
+          <button class="secondary-button" id="exportCsv">Export monthly CSV</button>
+        </article>
+        <article class="card action-card"><h2>Demo & reset</h2><button class="secondary-button" id="loadDemo">Load sample data</button><button class="danger-button" id="clearData">Erase all local data</button></article>
+        <article class="card install-card"><h2>Add to iPhone Home Screen</h2><ol><li>Open the hosted SaveTrack link in <strong>Safari</strong>.</li><li>Tap the <strong>Share</strong> button.</li><li>Choose <strong>Add to Home Screen</strong>, then <strong>Add</strong>.</li></ol><p>After the first successful load, the installed app can work offline.</p></article>
+      </section>
+    </main>
+
+    <nav class="bottom-nav" aria-label="Main navigation">
+      <button class="nav-item active" data-target="dashboard"><span>⌂</span><small>Home</small></button>
+      <button class="nav-item" data-target="activity"><span>↕</span><small>Activity</small></button>
+      <button class="nav-item" data-target="fixed"><span>↻</span><small>Fixed</small></button>
+      <button class="nav-item" data-target="savings"><span>◇</span><small>Savings</small></button>
+      <button class="nav-item" data-target="insights"><span>⌁</span><small>Insights</small></button>
+      <button class="nav-item" data-target="settings"><span>⚙</span><small>Settings</small></button>
+    </nav>
+  </div>
+
+  <dialog id="transactionDialog">
+    <form method="dialog" id="transactionForm" class="dialog-form">
+      <div class="dialog-heading"><div><span class="eyebrow">NEW ENTRY</span><h2 id="transactionDialogTitle">Add activity</h2></div><button type="button" class="icon-button close-dialog" aria-label="Close">×</button></div>
+      <input type="hidden" name="id" />
+      <div class="segmented"><label><input type="radio" name="type" value="expense" checked /><span>Expense</span></label><label><input type="radio" name="type" value="income" /><span>Income</span></label></div>
+      <label><span>Amount</span><input required name="amount" type="number" min="0.01" step="0.01" inputmode="decimal" placeholder="0" /></label>
+      <label><span>Category</span><select name="category" required></select></label>
+      <label><span>Date</span><input required name="date" type="date" /></label>
+      <label class="payment-field"><span>Payment method</span><select name="paymentMethod"><option>Bank account</option><option>Credit card</option><option>Cash</option><option>Other</option></select></label>
+      <label><span>Note</span><input name="note" maxlength="60" placeholder="Optional" /></label>
+      <div class="dialog-actions"><button class="secondary-button" type="button" id="deleteTransaction" hidden>Delete</button><button class="primary-button" type="submit">Save entry</button></div>
+    </form>
+  </dialog>
+
+  <dialog id="fixedDialog">
+    <form method="dialog" id="fixedForm" class="dialog-form">
+      <div class="dialog-heading"><div><span class="eyebrow">AUTO-PILOT</span><h2 id="fixedDialogTitle">Add fixed expense</h2></div><button type="button" class="icon-button close-dialog" aria-label="Close">×</button></div>
+      <input type="hidden" name="id" />
+      <label><span>Name</span><input required name="name" maxlength="50" placeholder="Rent, subscription…" /></label>
+      <label><span>Monthly amount</span><input required name="amount" type="number" min="0.01" step="0.01" inputmode="decimal" /></label>
+      <label><span>Category</span><select required name="category"></select></label>
+      <label><span>Payment method</span><select name="paymentMethod"><option>Bank account</option><option>Credit card</option><option>Cash</option><option>Other</option></select></label>
+      <label><span>Start month</span><input required name="startMonth" type="month" /></label>
+      <label><span>Payment day</span><input required name="day" type="number" min="1" max="31" value="1" /></label>
+      <label class="toggle-row"><span>Active</span><input name="active" type="checkbox" checked /></label>
+      <div class="dialog-actions"><button class="secondary-button" type="button" id="deleteFixed" hidden>Delete</button><button class="primary-button" type="submit">Save fixed expense</button></div>
+    </form>
+  </dialog>
+
+  <dialog id="privacyDialog">
+    <div class="dialog-form"><div class="dialog-heading"><div><span class="eyebrow">PRIVACY</span><h2>Your data stays here</h2></div><button class="icon-button close-dialog" aria-label="Close">×</button></div><p>SaveTrack stores entries in IndexedDB inside Safari on this device. It has no sign-in, tracking scripts, advertising SDKs, external fonts, analytics or cloud database.</p><p>Deleting Safari website data or the Home Screen app can remove local records. Use <strong>Export JSON backup</strong> regularly if the records matter to you.</p><button class="primary-button close-dialog">Understood</button></div>
+  </dialog>
+
+  <script src="calc.js"></script>
+  <script src="db.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>
